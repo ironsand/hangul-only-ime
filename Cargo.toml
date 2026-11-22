@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["hangul-core", "hangul-tip", "tools/smoke", "tools/e2e"]
+
+[profile.release]
+opt-level = 2
+debug = 1
