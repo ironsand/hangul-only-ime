@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install 32-bit target
+        run: rustup target add i686-pc-windows-msvc
+      - name: Unit tests
+        run: cargo test -p hangul-core
+      - name: Build x64
+        run: cargo build --release -p hangul-tip --target x86_64-pc-windows-msvc
+      - name: Build x86
+        run: cargo build --release -p hangul-tip --target i686-pc-windows-msvc
+      - name: COM smoke test (x64)
+        run: cargo run -p smoke -- target\x86_64-pc-windows-msvc\release\hangul_ime.dll
+      - name: Release DLL must not contain the debug keystroke log
+        shell: pwsh
+        run: |
+          foreach ($t in 'x86_64-pc-windows-msvc', 'i686-pc-windows-msvc') {
+            $dll = "target\$t\release\hangul_ime.dll"
+            if (Select-String -Path $dll -Pattern 'HANGUL_IME_LOG' -SimpleMatch -Quiet) { throw "$dll contains debug log code" }
+          }
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: cargo audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit

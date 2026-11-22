@@ -1,0 +1,54 @@
+name: Release
+
+# Push a tag like v0.1.0 to build and publish a release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install 32-bit target
+        run: rustup target add i686-pc-windows-msvc
+      - name: Unit tests
+        run: cargo test -p hangul-core
+      - name: Build
+        run: |
+          cargo build --release --locked -p hangul-tip --target x86_64-pc-windows-msvc
+          cargo build --release --locked -p hangul-tip --target i686-pc-windows-msvc
+      - name: COM smoke test (x64)
+        run: cargo run -p smoke -- target\x86_64-pc-windows-msvc\release\hangul_ime.dll
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "HangulIME-${{ github.ref_name }}"
+          $dir = "dist\$name"
+          New-Item -ItemType Directory -Force "$dir\x64", "$dir\x86" | Out-Null
+          Copy-Item target\x86_64-pc-windows-msvc\release\hangul_ime.dll "$dir\x64\"
+          Copy-Item target\i686-pc-windows-msvc\release\hangul_ime.dll "$dir\x86\"
+          foreach ($dll in "$dir\x64\hangul_ime.dll", "$dir\x86\hangul_ime.dll") {
+            if (Select-String -Path $dll -Pattern 'HANGUL_IME_LOG' -SimpleMatch -Quiet) { throw "$dll contains debug log code" }
+          }
+          Copy-Item install.ps1, uninstall.ps1, install.cmd, uninstall.cmd, README.md, LICENSE $dir
+          Push-Location $dir
+          Get-ChildItem -Recurse -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), (Resolve-Path -Relative $_.FullName).Substring(2).Replace('\', '/')
+          } | Set-Content -Encoding ascii SHA256SUMS.txt
+          Pop-Location
+          Compress-Archive -Path $dir -DestinationPath "dist\$name.zip"
+          $h = (Get-FileHash "dist\$name.zip" -Algorithm SHA256).Hash.ToLower()
+          "$h  $name.zip" | Set-Content -Encoding ascii "dist\$name.zip.sha256"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $name = "HangulIME-${{ github.ref_name }}"
+          gh release create "${{ github.ref_name }}" "dist\$name.zip" "dist\$name.zip.sha256" --title "${{ github.ref_name }}" --generate-notes
