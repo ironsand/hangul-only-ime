@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install 32-bit target
         run: rustup target add i686-pc-windows-msvc
       - name: Unit tests
@@ -34,7 +34,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: cargo audit
         run: |
           cargo install cargo-audit --locked
