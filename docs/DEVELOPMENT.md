@@ -1,65 +1,65 @@
-# 開発者向けメモ
+# Development notes
 
-Rust + TSF (Text Services Framework) で実装しています。
+Implemented in Rust on top of TSF (Text Services Framework).
 
-## 構成
+## Layout
 
-| パス | 内容 |
+| Path | Contents |
 |---|---|
-| `hangul-core/` | ハングル合成エンジン（OS 非依存・ユニットテスト付き） |
-| `hangul-tip/` | TSF テキストサービス DLL（COM in-proc サーバー） |
-| `tools/smoke/` | DLL を登録せずに読み込み、COM インターフェースを確認するテスト |
-| `tools/e2e/` | インストール済み IME に実際のキー入力を送り、EDIT / RichEdit で結果を検証するテスト |
-| `install.ps1` / `uninstall.ps1` | インストール / アンインストール（UAC で管理者に昇格） |
+| `hangul-core/` | Hangul composition engine (OS-independent, with unit tests) |
+| `hangul-tip/` | TSF text service DLL (COM in-proc server) |
+| `tools/smoke/` | Loads the DLL without registering it and checks its COM interfaces |
+| `tools/e2e/` | Sends real keystrokes to the installed IME and checks the result in EDIT / RichEdit controls |
+| `install.ps1` / `uninstall.ps1` | Install / uninstall (elevates via UAC) |
 
-## ビルドとインストール
+## Build and install
 
-Rust（MSVC ツールチェーン）が必要です。
+Requires Rust with the MSVC toolchain.
 
 ```powershell
-rustup target add i686-pc-windows-msvc                              # 32bit アプリ用
+rustup target add i686-pc-windows-msvc                              # for 32-bit apps
 cargo test -p hangul-core
 cargo build --release -p hangul-tip --target x86_64-pc-windows-msvc
 cargo build --release -p hangul-tip --target i686-pc-windows-msvc
 .\install.ps1
 ```
 
-## テスト
+## Tests
 
 ```powershell
-cargo test -p hangul-core                                   # 合成ロジック
-cargo run -p smoke -- target\debug\hangul_ime.dll           # COM の基本動作（登録不要）
-cargo run -p e2e                                            # インストール済み IME の実入力テスト
+cargo test -p hangul-core                                   # composition logic
+cargo run -p smoke -- target\debug\hangul_ime.dll           # basic COM behavior (no registration needed)
+cargo run -p e2e                                            # real input test against the installed IME
 ```
 
-`e2e` は自分のテスト用ウィンドウにだけ SendInput でキーを送ります（TSF はフォアグラウンドのスレッドにしか
-キーを渡さないため）。実行中はキーボード・マウスに触れないでください。前面を失うと即座に中断し、
-他のウィンドウには入力しません。
+`e2e` sends keys with SendInput only to its own test windows (TSF delivers keys only to the foreground thread).
+Do not touch the keyboard or mouse while it runs. If it loses the foreground it aborts immediately and never types
+into other windows.
 
-## リリース
+## Releases
 
-`v` で始まるタグ（例：`v0.1.0`）を push すると、GitHub Actions がビルドして Releases に zip を公開します。
+Pushing a tag starting with `v` (e.g. `v0.1.0`) makes GitHub Actions build the zip and publish it on Releases.
 
-## 設計メモ
+## Design notes
 
-- **合成中の文字は「暫定文字」(`fInterimChar`) として選択状態にする。** キャレットを合成文字の後ろに置くと、
-  韓国語ではアプリが確定扱いにしてコンポジションを終了してしまう。
-- **処理しないキーは `OnTestKeyDown` で同期的に確定し、キーは食べない。** 一度「処理した」と返したキーは
-  アプリに届かないため。
-- **キーボードの open/close コンパートメントを常に open に保つ。** closed だと TSF がキーを IME に渡さない
-  （한/영 キーなどで閉じられても再オープンする）。
-- すべての COM エントリポイントで panic を捕捉して、ホストアプリへ unwind させない。`DllCanUnloadNow` は
-  常に `S_FALSE`（アンロード後のクラッシュを避けるため）。
-- 使用中の DLL は上書きできないため、インストーラーは `.old` にリネームしてから差し替える。
+- **The syllable being composed is selected as an interim character (`fInterimChar`).** If the caret is placed after
+  it instead, apps treat Korean text as committed and terminate the composition.
+- **Keys the IME does not handle are committed synchronously in `OnTestKeyDown` and are not eaten.** A key reported
+  as handled never reaches the app.
+- **The keyboard open/close compartment is kept open.** When it is closed, TSF does not pass keys to the IME
+  (it is reopened if something such as the 한/영 key closes it).
+- Every COM entry point catches panics so they never unwind into the host app. `DllCanUnloadNow` always returns
+  `S_FALSE` (to avoid crashes after unloading).
+- A DLL in use cannot be overwritten, so the installer renames it to `.old` before replacing it.
 
-## デバッグログ
+## Debug log
 
-**デバッグビルド（`--release` なし）でのみ**、環境変数 `HANGUL_IME_LOG=<ファイルパス>` を設定して起動した
-プロセスでキー処理のログを書き出します。打鍵内容が残るため、リリースビルドにはこの機能はコンパイルされません
-（CI でも確認しています）。
+**In debug builds only (without `--release`)**, a process started with the environment variable
+`HANGUL_IME_LOG=<file path>` writes a log of key handling. Because the log contains keystrokes, this feature is not
+compiled into release builds (CI checks this).
 
-## フォークする場合
+## Forking
 
-自分版を配布するときは、`hangul-tip/src/lib.rs` の `CLSID_HANGUL_IME` と `GUID_PROFILE`（と
-`install.ps1` / `uninstall.ps1` の `$Tip`）を新しい GUID に変えてください。同じ GUID の IME が 2 つ
-インストールされると、互いの登録を上書きしてしまいます。
+If you distribute your own build, change `CLSID_HANGUL_IME` and `GUID_PROFILE` in `hangul-tip/src/lib.rs` (and
+`$Tip` in `install.ps1` / `uninstall.ps1`) to new GUIDs. Two IMEs installed with the same GUIDs overwrite each
+other's registration.

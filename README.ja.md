@@ -41,7 +41,7 @@ DLL とスクリプトには**コード署名がありません**。そのため
 
 ## ソースからビルドする
 
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)（英語）を参照してください。
 
 ## ライセンス
 

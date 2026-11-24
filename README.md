@@ -41,7 +41,7 @@ This IME **never communicates over the network and never writes files**.
 
 ## Building from source
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (Japanese).
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 
