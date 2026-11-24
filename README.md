@@ -1,46 +1,48 @@
 # Hangul IME
 
-Windows 用のハングル入力 IME（두벌식 / 2-beolsik 標準配列）です。
-英数モードはなく、常にハングル入力です。英語に戻すときは Win+Space で他の入力方式に切り替えます。
+English | [日本語](README.ja.md)
 
-## インストール
+A Hangul input method for Windows (standard 두벌식 / 2-beolsik layout).
+There is no English mode: it always types Hangul. To type English, switch to another input method with Win+Space.
 
-1. [Releases](../../releases) から `HangulIME-vX.Y.Z.zip` をダウンロードして展開します。
-2. 展開したフォルダーの `install.cmd` をダブルクリックし、UAC の確認で「はい」を選びます。
-3. Win+Space で「Hangul IME (두벌식)」に切り替えます。
+## Installation
 
-`C:\Program Files\HangulIME\` に DLL を配置して登録し、ユーザーの言語リストの「韓国語」に追加します。
-新しい版に更新したときは、起動中のアプリを再起動すると新しい版が使われます。
+1. Download `HangulIME-vX.Y.Z.zip` from [Releases](../../releases) and extract it.
+2. Double-click `install.cmd` in the extracted folder and choose "Yes" in the UAC prompt.
+3. Switch to "Hangul IME (두벌식)" with Win+Space.
 
-アンインストールは同じフォルダーの `uninstall.cmd` を実行します。
+The installer copies and registers the DLLs in `C:\Program Files\HangulIME\` and adds the IME to the Korean entry of
+your language list. After updating to a new version, restart running apps to load it.
 
-## 使い方
+To uninstall, run `uninstall.cmd` from the same folder.
 
-- 두벌식配列：`dkssudgktpdy` → 안녕하세요、Shift で ㅃㅉㄸㄲㅆㅒㅖ
-- Backspace は合成中の字母を 1 つずつ戻します（한 → 하 → ㅎ）
-- Space・Enter・記号・矢印・Ctrl/Alt ショートカットは、合成中の文字を確定してからアプリへ渡します
+## Usage
 
-## 既知の制限
+- 2-beolsik layout: `dkssudgktpdy` → 안녕하세요; Shift gives ㅃㅉㄸㄲㅆㅒㅖ
+- Backspace removes one jamo at a time from the syllable being composed (한 → 하 → ㅎ)
+- Space, Enter, symbols, arrow keys and Ctrl/Alt shortcuts commit the syllable being composed, then reach the app
 
-- 記号キーの位置は Windows の韓国語キーボードレイアウト（US 配列相当）に従います。JIS キーボードでは
-  一部の記号が刻印と異なります（Microsoft の韓国語 IME と同じ挙動）。
-- 漢字変換（한자）、세벌식配列、モード表示アイコンはありません。
+## Known limitations
 
-## 署名と検証について
+- Symbol keys follow the Windows Korean keyboard layout (equivalent to US). On a Japanese (JIS) keyboard some
+  symbols differ from the key labels (same as Microsoft's Korean IME).
+- No Hanja conversion (한자), no 3-beolsik (세벌식) layouts, no mode indicator icon.
 
-DLL とスクリプトには**コード署名がありません**。そのため SmartScreen や「発行元を確認できません」の警告が
-出ることがあります。配布 zip は GitHub Actions がこのリポジトリのソースからビルドしたものです
-（[release.yml](.github/workflows/release.yml)）。
+## Signing and verification
 
-- zip のハッシュはリリースに添付の `.sha256` と比較できます：`Get-FileHash HangulIME-vX.Y.Z.zip`
-- 展開したファイルごとのハッシュは `SHA256SUMS.txt` に記録されています。
+The DLLs and scripts are **not code-signed**, so SmartScreen or "unknown publisher" warnings may appear.
+Release zips are built from this repository's source by GitHub Actions
+([release.yml](.github/workflows/release.yml)).
 
-この IME は**ネットワーク通信やファイルへの書き込みを一切行いません**。
+- Compare the zip's hash with the `.sha256` file attached to the release: `Get-FileHash HangulIME-vX.Y.Z.zip`
+- Hashes of the individual files are listed in `SHA256SUMS.txt` inside the zip.
 
-## ソースからビルドする
+This IME **never communicates over the network and never writes files**.
 
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
+## Building from source
 
-## ライセンス
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (Japanese).
+
+## License
 
 [MIT](LICENSE)

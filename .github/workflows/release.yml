@@ -36,7 +36,7 @@ jobs:
           foreach ($dll in "$dir\x64\hangul_ime.dll", "$dir\x86\hangul_ime.dll") {
             if (Select-String -Path $dll -Pattern 'HANGUL_IME_LOG' -SimpleMatch -Quiet) { throw "$dll contains debug log code" }
           }
-          Copy-Item install.ps1, uninstall.ps1, install.cmd, uninstall.cmd, README.md, LICENSE $dir
+          Copy-Item install.ps1, uninstall.ps1, install.cmd, uninstall.cmd, README.md, README.ja.md, LICENSE $dir
           Push-Location $dir
           Get-ChildItem -Recurse -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object {
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), (Resolve-Path -Relative $_.FullName).Substring(2).Replace('\', '/')
