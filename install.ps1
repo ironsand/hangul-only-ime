@@ -1,11 +1,10 @@
-# Hangul IME installer. Elevates itself (UAC) when not run as administrator.
-# Works from an extracted release zip (x64\ and x86\ next to this script) or from the repo root
-# after building:
+# Development installer: installs the DLLs built in this repo. Elevates itself (UAC) when not run as administrator.
+# End users install with the setup .exe from Releases (installer\HangulIME.iss) instead.
+# Build first:
 #   cargo build --release -p hangul-tip --target x86_64-pc-windows-msvc
 #   cargo build --release -p hangul-tip --target i686-pc-windows-msvc
 $ErrorActionPreference = 'Stop'
 
-$Tip = '0412:{17432EFE-970E-4BA4-A40A-014C6C458922}{6E2BAEEB-AA1C-4529-95D9-E8ACB1B58162}'
 $Root = $PSScriptRoot
 $Dest = Join-Path $env:ProgramFiles 'HangulIME'
 
@@ -17,19 +16,13 @@ if (-not $isAdmin) {
     exit $p.ExitCode
 }
 
-function Find-Dll($arch, $triple) {
-    foreach ($p in @("$Root\$arch\hangul_ime.dll", "$Root\target\$triple\release\hangul_ime.dll")) {
-        if (Test-Path $p) { return $p }
-    }
-    throw "hangul_ime.dll ($arch) not found in $Root\$arch\ or $Root\target\$triple\release\"
-}
-
 $builds = @(
-    @{ Arch = 'x64'; Src = (Find-Dll 'x64' 'x86_64-pc-windows-msvc'); RegSvr = "$env:WINDIR\System32\regsvr32.exe" },
-    @{ Arch = 'x86'; Src = (Find-Dll 'x86' 'i686-pc-windows-msvc'); RegSvr = "$env:WINDIR\SysWOW64\regsvr32.exe" }
+    @{ Arch = 'x64'; Src = "$Root\target\x86_64-pc-windows-msvc\release\hangul_ime.dll"; RegSvr = "$env:WINDIR\System32\regsvr32.exe" },
+    @{ Arch = 'x86'; Src = "$Root\target\i686-pc-windows-msvc\release\hangul_ime.dll"; RegSvr = "$env:WINDIR\SysWOW64\regsvr32.exe" }
 )
 
 foreach ($b in $builds) {
+    if (-not (Test-Path $b.Src)) { throw "Build output not found: $($b.Src)" }
     $dir = Join-Path $Dest $b.Arch
     New-Item -ItemType Directory -Force $dir | Out-Null
     $dll = Join-Path $dir 'hangul_ime.dll'
@@ -49,15 +42,7 @@ foreach ($b in $builds) {
 }
 
 # Add the IME to the user's Korean language entry.
-$list = Get-WinUserLanguageList
-$ko = $list | Where-Object { $_.LanguageTag -eq 'ko' -or $_.LanguageTag -eq 'ko-KR' } | Select-Object -First 1
-if (-not $ko) {
-    $list.Add('ko')
-    $ko = $list[$list.Count - 1]
-    $ko.InputMethodTips.Clear()
-}
-if (-not $ko.InputMethodTips.Contains($Tip)) { $ko.InputMethodTips.Add($Tip) }
-Set-WinUserLanguageList $list -Force
+& (Join-Path $Root 'installer\langlist.ps1') -Add
 
 Write-Host ''
 Write-Host 'Installed. Switch to "Hangul IME" with Win+Space.' -ForegroundColor Green

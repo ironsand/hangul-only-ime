@@ -17,6 +17,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install 32-bit target
         run: rustup target add i686-pc-windows-msvc
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --version=6.7.3 -y --no-progress }
       - name: Unit tests
         run: cargo test -p hangul-core
       - name: Build
@@ -25,30 +29,26 @@ jobs:
           cargo build --release --locked -p hangul-tip --target i686-pc-windows-msvc
       - name: COM smoke test (x64)
         run: cargo run -p smoke -- target\x86_64-pc-windows-msvc\release\hangul_ime.dll
-      - name: Package
+      - name: Release DLLs must not contain the debug keystroke log
         shell: pwsh
         run: |
-          $name = "HangulIME-${{ github.ref_name }}"
-          $dir = "dist\$name"
-          New-Item -ItemType Directory -Force "$dir\x64", "$dir\x86" | Out-Null
-          Copy-Item target\x86_64-pc-windows-msvc\release\hangul_ime.dll "$dir\x64\"
-          Copy-Item target\i686-pc-windows-msvc\release\hangul_ime.dll "$dir\x86\"
-          foreach ($dll in "$dir\x64\hangul_ime.dll", "$dir\x86\hangul_ime.dll") {
+          foreach ($t in 'x86_64-pc-windows-msvc', 'i686-pc-windows-msvc') {
+            $dll = "target\$t\release\hangul_ime.dll"
             if (Select-String -Path $dll -Pattern 'HANGUL_IME_LOG' -SimpleMatch -Quiet) { throw "$dll contains debug log code" }
           }
-          Copy-Item install.ps1, uninstall.ps1, install.cmd, uninstall.cmd, README.md, README.ja.md, LICENSE $dir
-          Push-Location $dir
-          Get-ChildItem -Recurse -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object {
-            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), (Resolve-Path -Relative $_.FullName).Substring(2).Replace('\', '/')
-          } | Join-String -Separator "`n" -OutputSuffix "`n" | Set-Content -NoNewline -Encoding ascii SHA256SUMS.txt
-          Pop-Location
-          Compress-Archive -Path $dir -DestinationPath "dist\$name.zip"
-          $h = (Get-FileHash "dist\$name.zip" -Algorithm SHA256).Hash.ToLower()
-          "$h  $name.zip`n" | Set-Content -NoNewline -Encoding ascii "dist\$name.zip.sha256"
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DAppVersion=$version" installer\HangulIME.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
+          $exe = "HangulIME-Setup-$version.exe"
+          $h = (Get-FileHash "dist\$exe" -Algorithm SHA256).Hash.ToLower()
+          "$h  $exe`n" | Set-Content -NoNewline -Encoding ascii "dist\$exe.sha256"
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $name = "HangulIME-${{ github.ref_name }}"
-          gh release create "${{ github.ref_name }}" "dist\$name.zip" "dist\$name.zip.sha256" --title "${{ github.ref_name }}" --generate-notes
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          gh release create '${{ github.ref_name }}' "dist\HangulIME-Setup-$version.exe" "dist\HangulIME-Setup-$version.exe.sha256" --title '${{ github.ref_name }}' --generate-notes

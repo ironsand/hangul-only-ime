@@ -15,6 +15,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install 32-bit target
         run: rustup target add i686-pc-windows-msvc
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --version=6.7.3 -y --no-progress }
       - name: Unit tests
         run: cargo test -p hangul-core
       - name: Build x64
@@ -30,6 +34,11 @@ jobs:
             $dll = "target\$t\release\hangul_ime.dll"
             if (Select-String -Path $dll -Pattern 'HANGUL_IME_LOG' -SimpleMatch -Quiet) { throw "$dll contains debug log code" }
           }
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q /DAppVersion=0.0.0-ci installer\HangulIME.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
   audit:
     runs-on: ubuntu-latest

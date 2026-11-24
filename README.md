@@ -7,14 +7,14 @@ There is no English mode: it always types Hangul. To type English, switch to ano
 
 ## Installation
 
-1. Download `HangulIME-vX.Y.Z.zip` from [Releases](../../releases) and extract it.
-2. Double-click `install.cmd` in the extracted folder and choose "Yes" in the UAC prompt.
-3. Switch to "Hangul IME (두벌식)" with Win+Space.
+1. Download `HangulIME-Setup-X.Y.Z.exe` from [Releases](../../releases) and run it.
+2. Switch to "Hangul IME (두벌식)" with Win+Space.
 
-The installer copies and registers the DLLs in `C:\Program Files\HangulIME\` and adds the IME to the Korean entry of
-your language list. After updating to a new version, restart running apps to load it.
+The installer installs the IME in `C:\Program Files\HangulIME\` and adds it to Korean in your language list
+(Korean is added if it is not there yet). To update, run the installer of the new version; restart running apps to
+load it.
 
-To uninstall, run `uninstall.cmd` from the same folder.
+To uninstall, go to Settings > Apps > Installed apps > "Hangul IME (두벌식)".
 
 ## Usage
 
@@ -30,12 +30,10 @@ To uninstall, run `uninstall.cmd` from the same folder.
 
 ## Signing and verification
 
-The DLLs and scripts are **not code-signed**, so SmartScreen or "unknown publisher" warnings may appear.
-Release zips are built from this repository's source by GitHub Actions
-([release.yml](.github/workflows/release.yml)).
-
-- Compare the zip's hash with the `.sha256` file attached to the release: `Get-FileHash HangulIME-vX.Y.Z.zip`
-- Hashes of the individual files are listed in `SHA256SUMS.txt` inside the zip.
+The installer and the IME are **not code-signed**, so Windows SmartScreen may warn about an unknown publisher
+(click "More info" → "Run anyway"). Release installers are built from this repository's source by GitHub Actions
+([release.yml](.github/workflows/release.yml)). To check a download, compare its hash with the `.sha256` file
+attached to the release: `Get-FileHash HangulIME-Setup-X.Y.Z.exe`
 
 This IME **never communicates over the network and never writes files**.
 

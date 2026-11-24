@@ -1,0 +1,11 @@
+﻿Hangul IME will make the following changes to this PC:
+
+- Copy the IME files to C:\Program Files\HangulIME
+- Register the IME as a Windows text input service (for 64-bit and 32-bit apps)
+- Add "Hangul IME (두벌식)" to Korean in your language list
+  (Korean is added to the list if it is not there yet)
+
+After installing, switch to Hangul IME with Win+Space.
+
+Uninstall it from Settings > Apps to undo all of these changes.
+The IME never communicates over the network and never writes files.

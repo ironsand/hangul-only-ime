@@ -10,7 +10,8 @@ Implemented in Rust on top of TSF (Text Services Framework).
 | `hangul-tip/` | TSF text service DLL (COM in-proc server) |
 | `tools/smoke/` | Loads the DLL without registering it and checks its COM interfaces |
 | `tools/e2e/` | Sends real keystrokes to the installed IME and checks the result in EDIT / RichEdit controls |
-| `install.ps1` / `uninstall.ps1` | Install / uninstall (elevates via UAC) |
+| `installer/` | Inno Setup 6 script for the release installer, plus `langlist.ps1` (adds / removes the IME in the user's language list) |
+| `install.ps1` / `uninstall.ps1` | Quick install / uninstall of your local build during development (elevates via UAC) |
 
 ## Build and install
 
@@ -24,6 +25,9 @@ cargo build --release -p hangul-tip --target i686-pc-windows-msvc
 .\install.ps1
 ```
 
+Do not mix the two ways of installing: `install.ps1` installs into the same folder as the setup .exe but is not
+tracked by it. Uninstall one before using the other.
+
 ## Tests
 
 ```powershell
@@ -36,9 +40,21 @@ cargo run -p e2e                                            # real input test ag
 Do not touch the keyboard or mouse while it runs. If it loses the foreground it aborts immediately and never types
 into other windows.
 
+## Installer
+
+Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php). After building both DLLs:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" /DAppVersion=0.1.1 installer\HangulIME.iss
+# -> dist\HangulIME-Setup-0.1.1.exe
+```
+
+(Use `${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe` if Inno Setup was installed for all users.)
+
 ## Releases
 
-Pushing a tag starting with `v` (e.g. `v0.1.0`) makes GitHub Actions build the zip and publish it on Releases.
+Pushing a tag starting with `v` (e.g. `v0.1.1`) makes GitHub Actions build the installer and publish it with its
+SHA-256 hash on Releases.
 
 ## Design notes
 
@@ -50,7 +66,8 @@ Pushing a tag starting with `v` (e.g. `v0.1.0`) makes GitHub Actions build the z
   (it is reopened if something such as the 한/영 key closes it).
 - Every COM entry point catches panics so they never unwind into the host app. `DllCanUnloadNow` always returns
   `S_FALSE` (to avoid crashes after unloading).
-- A DLL in use cannot be overwritten, so the installer renames it to `.old` before replacing it.
+- A DLL in use cannot be overwritten, so the installers rename it to `.old` before replacing it. On uninstall,
+  files that are still loaded are renamed and deleted at the next restart.
 
 ## Debug log
 

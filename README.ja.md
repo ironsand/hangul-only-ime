@@ -7,14 +7,13 @@ Windows 用のハングル入力 IME（두벌식 / 2-beolsik 標準配列）で�
 
 ## インストール
 
-1. [Releases](../../releases) から `HangulIME-vX.Y.Z.zip` をダウンロードして展開します。
-2. 展開したフォルダーの `install.cmd` をダブルクリックし、UAC の確認で「はい」を選びます。
-3. Win+Space で「Hangul IME (두벌식)」に切り替えます。
+1. [Releases](../../releases) から `HangulIME-Setup-X.Y.Z.exe` をダウンロードして実行します。
+2. Win+Space で「Hangul IME (두벌식)」に切り替えます。
 
-`C:\Program Files\HangulIME\` に DLL を配置して登録し、ユーザーの言語リストの「韓国語」に追加します。
-新しい版に更新したときは、起動中のアプリを再起動すると新しい版が使われます。
+`C:\Program Files\HangulIME\` にインストールし、言語リストの「韓国語」に追加します（韓国語がなければ追加します）。
+更新するときは新しい版のインストーラーを実行してください。起動中のアプリは再起動すると新しい版が使われます。
 
-アンインストールは同じフォルダーの `uninstall.cmd` を実行します。
+アンインストールは「設定 > アプリ > インストールされているアプリ」の「Hangul IME (두벌식)」から行います。
 
 ## 使い方
 
@@ -30,12 +29,10 @@ Windows 用のハングル入力 IME（두벌식 / 2-beolsik 標準配列）で�
 
 ## 署名と検証について
 
-DLL とスクリプトには**コード署名がありません**。そのため SmartScreen や「発行元を確認できません」の警告が
-出ることがあります。配布 zip は GitHub Actions がこのリポジトリのソースからビルドしたものです
-（[release.yml](.github/workflows/release.yml)）。
-
-- zip のハッシュはリリースに添付の `.sha256` と比較できます：`Get-FileHash HangulIME-vX.Y.Z.zip`
-- 展開したファイルごとのハッシュは `SHA256SUMS.txt` に記録されています。
+インストーラーと IME には**コード署名がありません**。そのため SmartScreen が「発行元不明」の警告を出すことが
+あります（「詳細情報」→「実行」で続行できます）。配布しているインストーラーは GitHub Actions がこのリポジトリの
+ソースからビルドしたものです（[release.yml](.github/workflows/release.yml)）。ダウンロードしたファイルは、
+リリースに添付の `.sha256` とハッシュを比較して確認できます：`Get-FileHash HangulIME-Setup-X.Y.Z.exe`
 
 この IME は**ネットワーク通信やファイルへの書き込みを一切行いません**。
 
