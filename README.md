@@ -28,14 +28,27 @@ To uninstall, go to Settings > Apps > Installed apps > "Hangul IME (두벌식)".
   symbols differ from the key labels (same as Microsoft's Korean IME).
 - No Hanja conversion (한자), no 3-beolsik (세벌식) layouts, no mode indicator icon.
 
-## Signing and verification
+## Code signing policy
 
-The installer and the IME are **not code-signed**, so Windows SmartScreen may warn about an unknown publisher
-(click "More info" → "Run anyway"). Release installers are built from this repository's source by GitHub Actions
-([release.yml](.github/workflows/release.yml)). To check a download, compare its hash with the `.sha256` file
-attached to the release: `Get-FileHash HangulIME-Setup-X.Y.Z.exe`
+Releases are **not code-signed yet**, so Windows SmartScreen may warn about an unknown publisher
+(click "More info" → "Run anyway"). We are applying to the SignPath Foundation's free code signing program for open
+source projects. Once accepted, release files will be signed as follows:
 
-This IME **never communicates over the network and never writes files**.
+> Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
+> [SignPath Foundation](https://signpath.org/).
+
+- Only files built from this repository's source by GitHub Actions ([release.yml](.github/workflows/release.yml))
+  are signed, and every signing request is approved manually.
+- Committers and reviewers: [ironsand](https://github.com/ironsand)
+- Approvers: [ironsand](https://github.com/ironsand)
+
+To check a download, compare its hash with the `.sha256` file attached to the release:
+`Get-FileHash HangulIME-Setup-X.Y.Z.exe`
+
+### Privacy policy
+
+This program will not transfer any information to other networked systems unless specifically requested by the
+user or the person installing or operating it. The IME never communicates over the network and never writes files.
 
 ## Building from source
 

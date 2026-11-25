@@ -53,8 +53,10 @@ Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php). After building both 
 
 ## Releases
 
-Pushing a tag starting with `v` (e.g. `v0.1.1`) makes GitHub Actions build the installer and publish it with its
-SHA-256 hash on Releases.
+1. Set the new version in `hangul-tip/Cargo.toml` and `hangul-core/Cargo.toml` (it is embedded in the DLLs as
+   their product version) and commit.
+2. Push a tag `v<version>` (e.g. `v0.1.3`). GitHub Actions builds the installer and publishes it with its SHA-256
+   hash on Releases. The workflow fails if the tag does not match the version in `hangul-tip/Cargo.toml`.
 
 ## Design notes
 

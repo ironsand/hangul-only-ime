@@ -1,8 +1,9 @@
 [package]
 name = "hangul-tip"
-version = "0.1.0"
+version = "0.1.2"
 license = "MIT"
 edition = "2021"
+description = "Hangul IME (2-beolsik) text input service"
 
 [lib]
 name = "hangul_ime"
@@ -27,3 +28,6 @@ features = [
     "Win32_UI_TextServices",
     "Win32_UI_WindowsAndMessaging",
 ]
+
+[build-dependencies]
+winresource = "0.1"

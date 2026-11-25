@@ -15,6 +15,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+      - name: Tag must match the crate version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
+          $crate = ((cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages | Where-Object name -eq 'hangul-tip').version
+          if ($tag -ne $crate) { throw "Tag v$tag does not match the hangul-tip version $crate (hangul-tip/Cargo.toml)" }
       - name: Install 32-bit target
         run: rustup target add i686-pc-windows-msvc
       - name: Install Inno Setup
@@ -51,4 +57,5 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ github.ref_name }}'.TrimStart('v')
-          gh release create '${{ github.ref_name }}' "dist\HangulIME-Setup-$version.exe" "dist\HangulIME-Setup-$version.exe.sha256" --title '${{ github.ref_name }}' --generate-notes
+          gh release create '${{ github.ref_name }}' "dist\HangulIME-Setup-$version.exe" "dist\HangulIME-Setup-$version.exe.sha256" --title '${{ github.ref_name }}' --generate-notes `
+            --notes "Install: download and run ``HangulIME-Setup-$version.exe``. See the [Code signing policy](https://github.com/ironsand/hangul-only-ime#code-signing-policy)."
