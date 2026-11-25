@@ -58,8 +58,12 @@ SHA-256 hash on Releases.
 
 ## Design notes
 
-- **The syllable being composed is selected as an interim character (`fInterimChar`).** If the caret is placed after
-  it instead, apps treat Korean text as committed and terminate the composition.
+- **The composing syllable is shown the way Microsoft's Korean IME shows it, which depends on the app.** In apps
+  that use TSF through the IMM32 compatibility layer (the context is `TF_SS_TRANSITORY`: classic EDIT / RichEdit
+  controls, ...), it is selected as an interim character (`fInterimChar`); a caret placed after it makes those apps
+  treat the text as committed and terminate the composition. In native TSF apps (Windows 11 Notepad, ...), the
+  caret goes after it; those apps draw an interim selection as a highlight. `e2e --ms --shot <dir>` runs the
+  composing cases with Microsoft's IME and saves screenshots for comparison.
 - **Keys the IME does not handle are committed synchronously in `OnTestKeyDown` and are not eaten.** A key reported
   as handled never reaches the app.
 - **The keyboard open/close compartment is kept open.** When it is closed, TSF does not pass keys to the IME

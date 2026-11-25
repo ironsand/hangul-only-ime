@@ -173,7 +173,7 @@ fn apply(this: &ComObject<TextService>, ec: u32, ctx: &ITfContext) -> Result<()>
             let r2 = unsafe { comp2.GetRange()? };
             set_text(ec, &r2, &preedit)?;
             set_attr(this, ec, ctx, &r2);
-            set_interim(ec, ctx, &r2)?;
+            show_composing(ec, ctx, &r2)?;
         }
     } else if preedit.is_empty() {
         set_text(ec, &range, "")?;
@@ -182,7 +182,7 @@ fn apply(this: &ComObject<TextService>, ec: u32, ctx: &ITfContext) -> Result<()>
     } else {
         set_text(ec, &range, &preedit)?;
         set_attr(this, ec, ctx, &range);
-        set_interim(ec, ctx, &range)?;
+        show_composing(ec, ctx, &range)?;
     }
     Ok(())
 }
@@ -221,10 +221,26 @@ fn set_caret(ec: u32, ctx: &ITfContext, range: &ITfRange) -> Result<()> {
     }
 }
 
-/// Selects the composing syllable as an "interim character", the way Korean
-/// IMEs do. Applications treat a caret placed after the composition as final.
-fn set_interim(ec: u32, ctx: &ITfContext, range: &ITfRange) -> Result<()> {
-    unsafe { select(ec, ctx, range.Clone()?, true) }
+/// Shows the composing syllable the way Microsoft's Korean IME does:
+/// - In apps that reach TSF through the IMM32 compatibility layer (transitory contexts: classic EDIT and RichEdit
+///   controls, ...), select it as an "interim character". Those apps treat a caret placed after the composition as
+///   final and terminate it.
+/// - In native TSF apps (Windows 11 Notepad, ...), put the caret after it. They draw an interim selection as a
+///   highlight, and Microsoft's IME shows only the underline there.
+fn show_composing(ec: u32, ctx: &ITfContext, range: &ITfRange) -> Result<()> {
+    if is_transitory(ctx) {
+        unsafe { select(ec, ctx, range.Clone()?, true) }
+    } else {
+        set_caret(ec, ctx, range)
+    }
+}
+
+fn is_transitory(ctx: &ITfContext) -> bool {
+    match unsafe { ctx.GetStatus() } {
+        Ok(s) => s.dwStaticFlags & TF_SS_TRANSITORY != 0,
+        // Unknown: the interim style is the one that keeps the composition alive everywhere.
+        Err(_) => true,
+    }
 }
 
 fn select(ec: u32, ctx: &ITfContext, r: ITfRange, interim: bool) -> Result<()> {
